@@ -257,7 +257,7 @@
             <div class="avatar-mini">👤</div>
             <div style="font-size: 0.9rem;">
                 <div style="font-weight:bold; display: flex; align-items: center; gap: 6px;">
-                    <span id="current-user-name">Troyy</span>
+                    <span id="current-user-name">Troy</span>
                     <span style="font-size: 0.75rem; opacity: 0.6;">⚙️</span>
                 </div>
                 <div id="user-status-pill" class="status-pill status-available" onclick="toggleUserStatus()">Available</div>
@@ -540,9 +540,22 @@
             }
         }
 
+        /* --- UPDATED WINDOW.ONLOAD --- */
         window.onload = function() {
             const roomName = urlParams.get('room');
-            if (roomName) startVideoCall(roomName);
+            const mode = urlParams.get('mode'); // Get the mode from the URL
+
+            if (roomName) {
+                // If there is a room name, start the call
+                startVideoCall(roomName);
+            } else if (mode === 'arcade' || mode === 'games') {
+                // If the mode is arcade, go straight to the games tab
+                navigate('games');
+            } else if (mode === 'metime') {
+                // If the mode is metime, go straight to the metime tab
+                navigate('metime');
+            }
+
             renderLeaderboards();
         };
 
@@ -590,14 +603,28 @@
             else { pill.classList.replace('status-busy', 'status-available'); pill.innerText = 'Available'; }
         }
 
+        // --- UPDATED NAVIGATE FUNCTION (For Dynamic URLs) ---
         function navigate(viewId) {
+            // 1. Existing Logic: Switch the visible tabs
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('view-' + viewId).classList.add('active');
+            
             const map = {dashboard:0, directory:1, leaderboard:2, games:3, metime:4};
             if(map[viewId] !== undefined) document.querySelectorAll('aside .nav-item')[map[viewId]].classList.add('active');
             if(viewId === 'admin') document.getElementById('nav-admin').classList.add('active');
             document.getElementById('page-title').innerText = viewId.charAt(0).toUpperCase() + viewId.slice(1);
+
+            // 2. NEW LOGIC: Update the Browser URL without reloading
+            if (viewId !== 'dashboard') {
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('mode', viewId);
+                window.history.pushState({}, '', newUrl);
+            } else {
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.delete('mode');
+                window.history.pushState({}, '', newUrl);
+            }
         }
 
         function setRole(role) {
